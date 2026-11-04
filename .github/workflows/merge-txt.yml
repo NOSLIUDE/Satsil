@@ -1,0 +1,34 @@
+name: Merge All TXT Files
+
+on:
+  push:
+    branches: [ "main" ]   # Se sua branch for master, altere para master
+  workflow_dispatch:        # Permite execução manual
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Merge all .txt files into all_in_one.txt
+        run: |
+          # Evitar incluir o próprio arquivo gerado
+          find . -type f -name '*.txt' ! -name 'all_in_one.txt' -exec cat {} + > all_in_one.txt
+          echo "Arquivos TXT encontrados e unidos:"
+          find . -type f -name '*.txt' ! -name 'all_in_one.txt' -ls
+
+      - name: Commit and push merged file
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add all_in_one.txt
+          # Se não houver alterações, não fazer commit
+          git diff --staged --quiet || git commit -m "Auto merge all TXT files"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
